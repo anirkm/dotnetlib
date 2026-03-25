@@ -1,18 +1,16 @@
-using System.Collections.Generic;
-using System.Linq;
 using BusinessObjects.Entity;
 using BusinessObjects.Enum;
 using DataAccessLayer.Repository;
 
 namespace Services.Services;
 
-public class CatalogManager
+public class CatalogManager : ICatalogManager
 {
-    private readonly BookRepository _bookRepository;
+    private readonly IGenericRepository<Book> _bookRepository;
 
-    public CatalogManager()
+    public CatalogManager(IGenericRepository<Book> bookRepository)
     {
-        _bookRepository = new BookRepository();
+        _bookRepository = bookRepository;
     }
 
     public IEnumerable<Book> GetCatalog()

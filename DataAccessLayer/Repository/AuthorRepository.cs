@@ -1,10 +1,8 @@
-using System.Collections.Generic;
-using System.Linq;
 using BusinessObjects.Entity;
 
 namespace DataAccessLayer.Repository;
 
-public class AuthorRepository
+public class AuthorRepository : IGenericRepository<Author>
 {
     private readonly List<Author> _authors;
 

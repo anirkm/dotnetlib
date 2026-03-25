@@ -1,5 +1,9 @@
 using System;
+using BusinessObjects.Entity;
 using BusinessObjects.Enum;
+using DataAccessLayer.Repository;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Services.Services;
 
 namespace LibraryManager.App;
@@ -8,7 +12,11 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        CatalogManager catalogManager = new();
+        using IHost host = CreateHostBuilder();
+        using IServiceScope serviceScope = host.Services.CreateScope();
+        IServiceProvider services = serviceScope.ServiceProvider;
+        ICatalogManager catalogManager = services.GetRequiredService<ICatalogManager>();
+
         var catalog = catalogManager.GetCatalog();
         var featuredBook = catalogManager.FindBook(1);
         var adventureBooks = catalogManager.GetCatalog(TypeBook.Aventure);
@@ -34,5 +42,18 @@ public static class Program
         {
             Console.WriteLine(book.Name);
         }
+    }
+
+    private static IHost CreateHostBuilder()
+    {
+        return Host.CreateDefaultBuilder()
+            .ConfigureServices(services =>
+            {
+                services.AddTransient<IGenericRepository<Book>, BookRepository>();
+                services.AddTransient<IGenericRepository<Author>, AuthorRepository>();
+                services.AddTransient<IGenericRepository<Library>, LibraryRepository>();
+                services.AddTransient<ICatalogManager, CatalogManager>();
+            })
+            .Build();
     }
 }

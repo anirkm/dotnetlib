@@ -1,11 +1,9 @@
-using System.Collections.Generic;
-using System.Linq;
 using BusinessObjects.Entity;
 using BusinessObjects.Enum;
 
 namespace DataAccessLayer.Repository;
 
-public class BookRepository
+public class BookRepository : IGenericRepository<Book>
 {
     private readonly List<Book> _books;
 
