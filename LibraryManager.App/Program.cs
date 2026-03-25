@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using BusinessObjects.Entity;
+using BusinessObjects.Enum;
+using DataAccessLayer.Repository;
 
 namespace LibraryManager.App;
 
@@ -7,17 +10,16 @@ public static class Program
 {
     public static void Main(string[] args)
     {
-        List<Book> books = new()
-        {
-            new Book { Name = "The Count of Monte Crypto", Type = "Aventure" },
-            new Book { Name = "Indiana Jones and the Singleton of Doom", Type = "Aventure" },
-            new Book { Name = "C# for Wizards Who Fear Semicolons", Type = "Teaching" },
-            new Book { Name = "Lord of the Strings: Return of the Null", Type = "Fantasy" },
-            new Book { Name = "How to Debug Your Cat in 24 Easy Steps", Type = "Comedy" }
-        };
+        BookRepository bookRepository = new();
+        IEnumerable<Book> books = bookRepository.GetAll();
+        Book? featuredBook = bookRepository.Get(1);
+        IEnumerable<Book> adventureBooks = books.Where(book => book.Type == TypeBook.Aventure);
 
-        // Filter the catalog before displaying the matching titles.
-        IEnumerable<Book> adventureBooks = books.Where(book => book.Type == "Aventure");
+        if (featuredBook is not null)
+        {
+            Console.WriteLine($"Featured book: {featuredBook.Name}");
+            Console.WriteLine();
+        }
 
         foreach (Book book in adventureBooks)
         {
