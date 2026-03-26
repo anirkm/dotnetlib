@@ -15,16 +15,17 @@ public class CatalogManager : ICatalogManager
 
     public IEnumerable<Book> GetCatalog()
     {
-        return _bookRepository.GetAll();
+        return _bookRepository.GetMultiple(null, nameof(Book.Author), nameof(Book.Libraries));
     }
 
     public IEnumerable<Book> GetCatalog(TypeBook type)
     {
-        return _bookRepository.GetAll().Where(book => book.Type == type);
+        return _bookRepository.GetMultiple(book => book.Type == type, nameof(Book.Author), nameof(Book.Libraries));
     }
 
     public Book? FindBook(int id)
     {
-        return _bookRepository.Get(id);
+        return _bookRepository.GetMultiple(book => book.Id == id, nameof(Book.Author), nameof(Book.Libraries))
+            .FirstOrDefault();
     }
 }

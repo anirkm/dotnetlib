@@ -1,9 +1,11 @@
 using System;
-using BusinessObjects.Entity;
 using BusinessObjects.Enum;
+using DataAccessLayer.Contexts;
 using DataAccessLayer.Repository;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Services.Services;
 
 namespace LibraryManager.App;
@@ -20,6 +22,8 @@ public static class Program
         var catalog = catalogManager.GetCatalog();
         var featuredBook = catalogManager.FindBook(1);
         var adventureBooks = catalogManager.GetCatalog(TypeBook.Aventure);
+        var lawBook = catalogManager.GetCatalog(TypeBook.Juridique);
+        var teachingBooks = catalogManager.GetCatalog(TypeBook.Enseignement);
 
         Console.WriteLine("Full catalog:");
 
@@ -42,16 +46,41 @@ public static class Program
         {
             Console.WriteLine(book.Name);
         }
+
+        Console.WriteLine("Law books:");
+
+        foreach (var book in lawBook)
+        {
+            Console.WriteLine(book.Name);
+        }
+
+        Console.WriteLine("Teaching books:");
+
+        foreach (var book in teachingBooks)
+        {
+            Console.WriteLine(book.Name);
+        }
+
+        Console.WriteLine();
     }
 
     private static IHost CreateHostBuilder()
     {
+        string dbPath = Path.Combine(AppContext.BaseDirectory, "library.db");
+
         return Host.CreateDefaultBuilder()
+            .ConfigureLogging(logging =>
+            {
+                logging.SetMinimumLevel(LogLevel.Warning);
+            })
             .ConfigureServices(services =>
             {
-                services.AddTransient<IGenericRepository<Book>, BookRepository>();
-                services.AddTransient<IGenericRepository<Author>, AuthorRepository>();
-                services.AddTransient<IGenericRepository<Library>, LibraryRepository>();
+                services.AddDbContext<LibraryContext>(options =>
+                {
+                    options.UseSqlite($"Data Source={dbPath}");
+                });
+
+                services.AddTransient(typeof(IGenericRepository<>), typeof(GenericRepository<>));
                 services.AddTransient<ICatalogManager, CatalogManager>();
             })
             .Build();
