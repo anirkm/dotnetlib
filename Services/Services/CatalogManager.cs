@@ -7,10 +7,12 @@ namespace Services.Services;
 public class CatalogManager : ICatalogManager
 {
     private readonly IGenericRepository<Book> _bookRepository;
+    private readonly IGenericRepository<Author> _authorRepository;
 
-    public CatalogManager(IGenericRepository<Book> bookRepository)
+    public CatalogManager(IGenericRepository<Book> bookRepository, IGenericRepository<Author> authorRepository)
     {
         _bookRepository = bookRepository;
+        _authorRepository = authorRepository;
     }
 
     public IEnumerable<Book> GetCatalog()
@@ -48,5 +50,13 @@ public class CatalogManager : ICatalogManager
     public bool DeleteBook(int id)
     {
         return _bookRepository.Delete(id);
+    }
+
+    public Author? FindAuthor(string firstName, string lastName)
+    {
+        return _authorRepository.GetMultiple(author =>
+                author.FirstName.Equals(firstName, StringComparison.OrdinalIgnoreCase) &&
+                author.LastName.Equals(lastName, StringComparison.OrdinalIgnoreCase))
+            .FirstOrDefault();
     }
 }

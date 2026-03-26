@@ -16,4 +16,6 @@ public interface ICatalogManager
     Book? GetTopRatedBook();
 
     bool DeleteBook(int id);
+
+    Author? FindAuthor(string firstName, string lastName);
 }

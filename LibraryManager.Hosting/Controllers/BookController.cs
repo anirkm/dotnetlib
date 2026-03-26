@@ -1,3 +1,4 @@
+using BusinessObjects.DataTransferObject;
 using BusinessObjects.Entity;
 using BusinessObjects.Enum;
 using Microsoft.AspNetCore.Mvc;
@@ -17,13 +18,13 @@ public class BookController : ControllerBase
     }
 
     [HttpGet]
-    public ActionResult<IEnumerable<Book>> GetBooks()
+    public ActionResult<IEnumerable<BookDto>> GetBooks()
     {
-        return Ok(_catalogManager.GetCatalog());
+        return Ok(_catalogManager.GetCatalog().Select(ToDto));
     }
 
     [HttpGet("{id:int}")]
-    public ActionResult<Book> GetBook(int id)
+    public ActionResult<BookDto> GetBook(int id)
     {
         Book? book = _catalogManager.FindBook(id);
 
@@ -32,17 +33,17 @@ public class BookController : ControllerBase
             return NotFound();
         }
 
-        return Ok(book);
+        return Ok(ToDto(book));
     }
 
     [HttpGet("type/{type}")]
-    public ActionResult<IEnumerable<Book>> GetBooksByType(TypeBook type)
+    public ActionResult<IEnumerable<BookDto>> GetBooksByType(TypeBook type)
     {
-        return Ok(_catalogManager.GetCatalog(type));
+        return Ok(_catalogManager.GetCatalog(type).Select(ToDto));
     }
 
     [HttpGet("top-rated")]
-    public ActionResult<Book> GetTopRatedBook()
+    public ActionResult<BookDto> GetTopRatedBook()
     {
         Book? book = _catalogManager.GetTopRatedBook();
 
@@ -51,16 +52,37 @@ public class BookController : ControllerBase
             return NotFound();
         }
 
-        return Ok(book);
+        return Ok(ToDto(book));
     }
 
     [HttpPost]
-    public ActionResult<Book> AddBook([FromBody] Book book)
+    public ActionResult<BookDto> AddBook([FromBody] BookCreateDto bookCreateDto)
     {
+        if (!Enum.TryParse(bookCreateDto.Type, true, out TypeBook type))
+        {
+            return BadRequest("Unknown book type.");
+        }
+
+        Author? author = _catalogManager.FindAuthor(bookCreateDto.AuthorFirstName, bookCreateDto.AuthorLastName);
+
+        if (author is null)
+        {
+            return BadRequest("Author not found.");
+        }
+
+        Book book = new()
+        {
+            Name = bookCreateDto.Name,
+            Pages = bookCreateDto.Pages,
+            Type = type,
+            Rate = 0,
+            AuthorId = author.Id
+        };
+
         Book createdBook = _catalogManager.AddBook(book);
         Book? createdBookWithRelations = _catalogManager.FindBook(createdBook.Id);
 
-        return CreatedAtAction(nameof(GetBook), new { id = createdBook.Id }, createdBookWithRelations ?? createdBook);
+        return CreatedAtAction(nameof(GetBook), new { id = createdBook.Id }, ToDto(createdBookWithRelations ?? createdBook));
     }
 
     [HttpDelete("{id:int}")]
@@ -74,5 +96,23 @@ public class BookController : ControllerBase
         }
 
         return NoContent();
+    }
+
+    private static BookDto ToDto(Book book)
+    {
+        return new BookDto
+        {
+            Id = book.Id,
+            Name = book.Name,
+            Pages = book.Pages,
+            Type = book.Type.ToString(),
+            Author = book.Author is null
+                ? null
+                : new AuthorDto
+                {
+                    FirstName = book.Author.FirstName,
+                    LastName = book.Author.LastName
+                }
+        };
     }
 }

@@ -22,7 +22,9 @@ public class CatalogManagerTest
             .Setup(repository => repository.GetMultiple(null, nameof(Book.Author), nameof(Book.Libraries)))
             .Returns(books);
 
-        CatalogManager catalogManager = new(repositoryMock.Object);
+        Mock<IGenericRepository<Author>> authorRepositoryMock = new();
+
+        CatalogManager catalogManager = new(repositoryMock.Object, authorRepositoryMock.Object);
 
         IEnumerable<Book> result = catalogManager.GetCatalog();
 
@@ -47,7 +49,9 @@ public class CatalogManagerTest
             .Setup(repository => repository.GetMultiple(It.IsAny<Func<Book, bool>>(), nameof(Book.Author), nameof(Book.Libraries)))
             .Returns((Func<Book, bool>? filter, string[] _) => filter is null ? [] : books.Where(filter).ToList());
 
-        CatalogManager catalogManager = new(repositoryMock.Object);
+        Mock<IGenericRepository<Author>> authorRepositoryMock = new();
+
+        CatalogManager catalogManager = new(repositoryMock.Object, authorRepositoryMock.Object);
 
         IEnumerable<Book> result = catalogManager.GetCatalog(TypeBook.Aventure);
 
@@ -72,7 +76,9 @@ public class CatalogManagerTest
                 return filter is null ? books : books.Where(filter).ToList();
             });
 
-        CatalogManager catalogManager = new(repositoryMock.Object);
+        Mock<IGenericRepository<Author>> authorRepositoryMock = new();
+
+        CatalogManager catalogManager = new(repositoryMock.Object, authorRepositoryMock.Object);
 
         Book? result = catalogManager.FindBook(1);
 
@@ -94,7 +100,9 @@ public class CatalogManagerTest
             .Setup(repository => repository.GetMultiple(It.IsAny<Func<Book, bool>>(), nameof(Book.Author), nameof(Book.Libraries)))
             .Returns((Func<Book, bool>? filter, string[] _) => filter is null ? books : books.Where(filter).ToList());
 
-        CatalogManager catalogManager = new(repositoryMock.Object);
+        Mock<IGenericRepository<Author>> authorRepositoryMock = new();
+
+        CatalogManager catalogManager = new(repositoryMock.Object, authorRepositoryMock.Object);
 
         Book? result = catalogManager.FindBook(99);
 
