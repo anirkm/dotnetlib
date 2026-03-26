@@ -10,4 +10,10 @@ public interface ICatalogManager
     IEnumerable<Book> GetCatalog(TypeBook type);
 
     Book? FindBook(int id);
+
+    Book AddBook(Book book);
+
+    Book? GetTopRatedBook();
+
+    bool DeleteBook(int id);
 }

@@ -32,6 +32,20 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class, IEnti
         return entity;
     }
 
+    public bool Delete(int id)
+    {
+        T? entity = _dbSet.FirstOrDefault(item => item.Id == id);
+
+        if (entity is null)
+        {
+            return false;
+        }
+
+        _dbSet.Remove(entity);
+        _context.SaveChanges();
+        return true;
+    }
+
     public IEnumerable<T> GetMultiple(Func<T, bool>? filter = null, params string[] includes)
     {
         IQueryable<T> query = _dbSet;

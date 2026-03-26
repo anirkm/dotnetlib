@@ -28,4 +28,25 @@ public class CatalogManager : ICatalogManager
         return _bookRepository.GetMultiple(book => book.Id == id, nameof(Book.Author), nameof(Book.Libraries))
             .FirstOrDefault();
     }
+
+    public Book AddBook(Book book)
+    {
+        book.Id = 0;
+        book.Author = null;
+        book.Libraries = [];
+
+        return _bookRepository.Add(book);
+    }
+
+    public Book? GetTopRatedBook()
+    {
+        return GetCatalog()
+            .OrderByDescending(book => book.Rate)
+            .FirstOrDefault();
+    }
+
+    public bool DeleteBook(int id)
+    {
+        return _bookRepository.Delete(id);
+    }
 }
