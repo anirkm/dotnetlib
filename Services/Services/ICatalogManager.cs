@@ -9,6 +9,8 @@ public interface ICatalogManager
 
     IEnumerable<Book> GetCatalog(TypeBook type);
 
+    IEnumerable<Book> GetFilteredBooks(TypeBook? type = null, string? authorFirstName = null, string? authorLastName = null);
+
     Book? FindBook(int id);
 
     Book AddBook(Book book);

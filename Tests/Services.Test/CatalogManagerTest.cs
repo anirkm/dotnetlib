@@ -109,13 +109,72 @@ public class CatalogManagerTest
         Assert.Null(result);
     }
 
-    private static Book CreateBook(int id, string name, TypeBook type)
+    [Fact]
+    public void GetFilteredBooks_WithTypeAndAuthorFilters_ReturnsMatchingBooks()
+    {
+        List<Book> books =
+        [
+            CreateBook(1, "Le conte de Monte Cristo", TypeBook.Aventure, "Alexandre", "Dumas"),
+            CreateBook(2, "Les trois mousquetaires", TypeBook.Aventure, "Alexandre", "Dumas"),
+            CreateBook(3, "Le RC Lens, un club pas comme les autres", TypeBook.Histoire, "Severine", "Lettrez")
+        ];
+
+        Mock<IGenericRepository<Book>> repositoryMock = new();
+        repositoryMock
+            .Setup(repository => repository.GetMultiple(It.IsAny<Func<Book, bool>>(), nameof(Book.Author), nameof(Book.Libraries)))
+            .Returns((Func<Book, bool>? filter, string[] _) => filter is null ? books : books.Where(filter).ToList());
+
+        Mock<IGenericRepository<Author>> authorRepositoryMock = new();
+
+        CatalogManager catalogManager = new(repositoryMock.Object, authorRepositoryMock.Object);
+
+        IEnumerable<Book> result = catalogManager.GetFilteredBooks(TypeBook.Aventure, "alex", "dum");
+
+        Assert.Equal(2, result.Count());
+        Assert.All(result, book =>
+        {
+            Assert.Equal(TypeBook.Aventure, book.Type);
+            Assert.NotNull(book.Author);
+            Assert.Contains("Alex", book.Author!.FirstName, StringComparison.OrdinalIgnoreCase);
+        });
+    }
+
+    [Fact]
+    public void GetFilteredBooks_WithLastNameOnly_ReturnsMatchingBooks()
+    {
+        List<Book> books =
+        [
+            CreateBook(1, "Le conte de Monte Cristo", TypeBook.Aventure, "Alexandre", "Dumas"),
+            CreateBook(2, "Apprendre le Java", TypeBook.Enseignement, "Remy", "Synave")
+        ];
+
+        Mock<IGenericRepository<Book>> repositoryMock = new();
+        repositoryMock
+            .Setup(repository => repository.GetMultiple(It.IsAny<Func<Book, bool>>(), nameof(Book.Author), nameof(Book.Libraries)))
+            .Returns((Func<Book, bool>? filter, string[] _) => filter is null ? books : books.Where(filter).ToList());
+
+        Mock<IGenericRepository<Author>> authorRepositoryMock = new();
+
+        CatalogManager catalogManager = new(repositoryMock.Object, authorRepositoryMock.Object);
+
+        IEnumerable<Book> result = catalogManager.GetFilteredBooks(authorLastName: "syn");
+
+        Book filteredBook = Assert.Single(result);
+        Assert.Equal("Apprendre le Java", filteredBook.Name);
+    }
+
+    private static Book CreateBook(int id, string name, TypeBook type, string authorFirstName = "Alexandre", string authorLastName = "Dumas")
     {
         return new Book
         {
             Id = id,
             Name = name,
-            Type = type
+            Type = type,
+            Author = new Author
+            {
+                FirstName = authorFirstName,
+                LastName = authorLastName
+            }
         };
     }
 }

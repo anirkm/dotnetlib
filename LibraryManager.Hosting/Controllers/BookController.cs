@@ -55,6 +55,38 @@ public class BookController : ControllerBase
         return Ok(ToDto(book));
     }
 
+    [HttpGet("/filteredBooks")]
+    public ActionResult<IEnumerable<BookAuthorDto>> GetFilteredBooks(
+        [FromQuery] string? type,
+        [FromQuery] string? authorFirstName,
+        [FromQuery] string? authorLastName)
+    {
+        if (string.IsNullOrWhiteSpace(type) &&
+            string.IsNullOrWhiteSpace(authorFirstName) &&
+            string.IsNullOrWhiteSpace(authorLastName))
+        {
+            return BadRequest("At least one filter is required.");
+        }
+
+        TypeBook? parsedType = null;
+
+        if (!string.IsNullOrWhiteSpace(type))
+        {
+            if (!Enum.TryParse(type, true, out TypeBook typeBook))
+            {
+                return BadRequest("Unknown book type.");
+            }
+
+            parsedType = typeBook;
+        }
+
+        IEnumerable<BookAuthorDto> filteredBooks = _catalogManager
+            .GetFilteredBooks(parsedType, authorFirstName, authorLastName)
+            .Select(ToBookAuthorDto);
+
+        return Ok(filteredBooks);
+    }
+
     [HttpPost]
     public ActionResult<BookDto> AddBook([FromBody] BookCreateDto bookCreateDto)
     {
@@ -106,13 +138,37 @@ public class BookController : ControllerBase
             Name = book.Name,
             Pages = book.Pages,
             Type = book.Type.ToString(),
-            Author = book.Author is null
-                ? null
-                : new AuthorDto
-                {
-                    FirstName = book.Author.FirstName,
-                    LastName = book.Author.LastName
-                }
+            Author = ToAuthorDto(book.Author)
         };
+    }
+
+    private static BookAuthorDto ToBookAuthorDto(Book book)
+    {
+        return new BookAuthorDto
+        {
+            Id = book.Id,
+            Name = book.Name,
+            Pages = book.Pages,
+            Type = book.Type.ToString(),
+            Author = ToAuthorDto(book.Author),
+            Libraries = book.Libraries
+                .Select(library => new LibraryDto
+                {
+                    Name = library.Name,
+                    Address = library.Address
+                })
+                .ToList()
+        };
+    }
+
+    private static AuthorDto? ToAuthorDto(Author? author)
+    {
+        return author is null
+            ? null
+            : new AuthorDto
+            {
+                FirstName = author.FirstName,
+                LastName = author.LastName
+            };
     }
 }
